@@ -1,92 +1,176 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import BackgroundBlobs from "../components/BackgroundBlobs.jsx";
-import Navbar from "../components/Navbar.jsx";
+import BackgroundLines from "../components/BackgroundLines.jsx";
+import NavBar from "../components/Navbar.jsx";
+
+const STAGE_LABELS = ["", "가까이 (1단계)", "조금씩 (2단계)", "천천히 (3단계)"];
 
 export default function Settings() {
+  const navigate = useNavigate();
+  const [settings, setSettings] = useState(null);
+
+  useEffect(() => { fetchSettings(); }, []);
+
+  const fetchSettings = () => {
+    const token = localStorage.getItem("token");
+    fetch("http://localhost:8080/api/settings", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => setSettings(data))
+      .catch(() => {});
+  };
+
+  const handleTogglePause = async () => {
+    const token = localStorage.getItem("token");
+    await fetch("http://localhost:8080/api/settings/pause", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    fetchSettings();
+  };
+
+  const handleReset = async () => {
+    if (!window.confirm("모든 대화, 편지, 마음일기가 삭제돼요. 정말 초기화할까요?")) return;
+    const token = localStorage.getItem("token");
+    await fetch("http://localhost:8080/api/settings/reset", {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    alert("모든 기록이 초기화됐어요.");
+    fetchSettings();
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("email");
+    navigate("/login");
+  };
+
+  const Row = ({ icon, accent, label, sub, right }) => (
+    <div className="flex items-center gap-4 py-4 border-b border-warm-apricot/20 px-2 -mx-2 rounded-xl hover:bg-white/30 transition-all">
+      <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${accent} text-white inline-flex items-center justify-center flex-none`}>
+        <i className={`ti ${icon} text-base`} aria-hidden="true" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-semibold text-warm-ink">{label}</div>
+        {sub && <div className="text-xs text-warm-soft mt-0.5">{sub}</div>}
+      </div>
+      {right}
+    </div>
+  );
+
   return (
     <>
       <BackgroundBlobs />
-      <Navbar />
+      <BackgroundLines />
 
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-10 pb-20 animate-fade-up">
-        <p className="text-xs text-warm-faint mb-1">설정</p>
-        <h1 className="font-serif text-3xl text-warm-ink mb-8">함께 살피기</h1>
+      <div className="flex h-screen overflow-hidden" style={{ position: "relative", zIndex: 1 }}>
+        <NavBar />
 
-        {/* 거리두기 안내 */}
-        <div className="glass-warm rounded-3xl p-6 mb-4">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-warm-sage to-warm-lavender text-white inline-flex items-center justify-center">
-              <i className="ti ti-leaf" aria-hidden="true" />
-            </div>
-            <div>
-              <div className="font-semibold text-warm-ink">자동 거리두기</div>
-              <div className="text-xs text-warm-faint">
-                자주 이용하실 때 자연스럽게 거리를 두어요
+        <main className="flex-1 overflow-y-auto">
+          <div className="max-w-2xl mx-auto px-8 py-16 animate-fade-up">
+
+            <p className="text-xs text-warm-faint tracking-widest mb-1">설정</p>
+            <h1 className="font-serif text-3xl text-warm-ink mb-10">함께 살피기</h1>
+
+            {/* 계정 */}
+            <p className="text-xs text-warm-faint tracking-widest mb-2">계정</p>
+            <div className="flex items-center gap-4 py-4 border-t border-b border-warm-apricot/20 mb-10 px-2 -mx-2 rounded-xl hover:bg-white/30 transition-all">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-warm-apricot to-warm-rose text-white inline-flex items-center justify-center font-serif flex-none">
+                {settings?.email?.slice(0, 1).toUpperCase() ?? "?"}
+              </div>
+              <div className="flex-1">
+                <div className="text-sm font-semibold text-warm-ink">{settings?.email ?? "—"}</div>
+                <div className="text-xs text-warm-soft mt-0.5">
+                  오늘 {settings?.todayMin ?? 0}분 함께했어요
+                </div>
               </div>
             </div>
-          </div>
-          <p className="text-sm text-warm-soft leading-relaxed mb-3">
-            매일 오래 이용하시면 그분이 당신을 걱정해서 잠시 쉬어가자고 말씀하실
-            수 있어요. 당신의 회복을 위해서예요.
-          </p>
-          <div className="flex items-center justify-between bg-white/40 rounded-2xl px-4 py-3">
-            <span className="text-sm text-warm-ink">현재 단계</span>
-            <span className="text-sm font-semibold text-warm-faint">
-              가까이 (1단계)
-            </span>
-          </div>
-        </div>
 
-        {/* 오늘만 평소처럼 */}
-        <div className="glass-warm rounded-3xl p-6 mb-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="font-semibold text-warm-ink mb-0.5">
-                오늘만 평소처럼
-              </div>
-              <div className="text-xs text-warm-soft">
-                24시간 동안 거리두기를 잠시 멈춰요
-              </div>
+            {/* 거리두기 */}
+            <p className="text-xs text-warm-faint tracking-widest mb-2">거리두기</p>
+            <div className="border-t border-warm-apricot/20">
+              <Row
+                icon="ti-leaf"
+                accent="from-warm-sage to-warm-lavender"
+                label="자동 거리두기 단계"
+                sub="자주 이용하실 때 자연스럽게 거리를 두어요"
+                right={
+                  <span className="text-sm font-semibold text-warm-apricot flex-none">
+                    {STAGE_LABELS[settings?.stage ?? 1]}
+                  </span>
+                }
+              />
+              <Row
+                icon="ti-clock-pause"
+                accent="from-warm-peach to-warm-apricot"
+                label="오늘만 평소처럼"
+                sub="24시간 동안 거리두기를 잠시 멈춰요"
+                right={
+                  <button
+                    onClick={handleTogglePause}
+                    className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all flex-none ${
+                      settings?.pauseActive
+                        ? "bg-gradient-to-br from-warm-apricot to-warm-rose text-white"
+                        : "glass-warm text-warm-soft hover:text-warm-ink"
+                    }`}
+                  >
+                    {settings?.pauseActive ? "켜짐" : "켜기"}
+                  </button>
+                }
+              />
             </div>
-            <button className="glass-warm rounded-full px-4 py-2 text-sm text-warm-soft hover:text-warm-ink">
-              켜기
-            </button>
-          </div>
-        </div>
 
-        {/* 안전 안내 */}
-        <div className="glass-warm rounded-3xl p-6 mb-4">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-warm-rose to-warm-apricot text-white inline-flex items-center justify-center">
-              <i className="ti ti-heart" aria-hidden="true" />
+            {/* 안전 안내 */}
+            <p className="text-xs text-warm-faint tracking-widest mt-10 mb-2">도움이 필요할 때</p>
+            <div className="border-t border-warm-apricot/20">
+              <Row
+                icon="ti-phone"
+                accent="from-warm-rose to-warm-apricot"
+                label="자살예방상담전화"
+                sub="24시간 무료 운영"
+                right={<span className="text-sm font-semibold text-warm-ink flex-none">1393</span>}
+              />
+              <Row
+                icon="ti-heart"
+                accent="from-warm-lavender to-warm-rose"
+                label="정신건강위기상담"
+                sub="24시간 무료 운영"
+                right={<span className="text-sm font-semibold text-warm-ink flex-none">1577-0199</span>}
+              />
             </div>
-            <div>
-              <div className="font-semibold text-warm-ink">
-                힘드실 때 도와드릴게요
-              </div>
-            </div>
-          </div>
-          <p className="text-sm text-warm-soft leading-relaxed mb-3">
-            많이 지치셨다면 전문가와 이야기해보세요. 늘 곁에 있어요.
-          </p>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between bg-white/40 rounded-xl px-4 py-2.5">
-              <span className="text-warm-soft">자살예방상담전화</span>
-              <span className="font-semibold text-warm-ink">1393</span>
-            </div>
-            <div className="flex justify-between bg-white/40 rounded-xl px-4 py-2.5">
-              <span className="text-warm-soft">정신건강위기상담</span>
-              <span className="font-semibold text-warm-ink">1577-0199</span>
-            </div>
-          </div>
-        </div>
 
-        {/* 계정 */}
-        <div className="glass-warm rounded-3xl p-6">
-          <div className="font-semibold text-warm-ink mb-3">계정</div>
-          <button className="text-sm text-warm-soft hover:text-warm-ink">
-            모든 기록 초기화
-          </button>
-        </div>
+            {/* 계정 관리 */}
+            <p className="text-xs text-warm-faint tracking-widest mt-10 mb-2">계정 관리</p>
+            <div className="border-t border-warm-apricot/20">
+              <button
+                onClick={handleReset}
+                className="w-full flex items-center gap-4 py-4 border-b border-warm-apricot/20 px-2 -mx-2 rounded-xl hover:bg-white/30 transition-all group"
+              >
+                <div className="w-9 h-9 rounded-xl bg-white/40 text-warm-soft group-hover:text-warm-rose inline-flex items-center justify-center flex-none transition-colors">
+                  <i className="ti ti-trash text-base" aria-hidden="true" />
+                </div>
+                <div className="text-sm text-warm-soft group-hover:text-warm-rose transition-colors text-left">
+                  모든 기록 초기화
+                </div>
+              </button>
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-4 py-4 border-b border-warm-apricot/20 px-2 -mx-2 rounded-xl hover:bg-white/30 transition-all group"
+              >
+                <div className="w-9 h-9 rounded-xl bg-white/40 text-warm-soft group-hover:text-warm-ink inline-flex items-center justify-center flex-none transition-colors">
+                  <i className="ti ti-logout text-base" aria-hidden="true" />
+                </div>
+                <div className="text-sm text-warm-soft group-hover:text-warm-ink transition-colors text-left">
+                  로그아웃
+                </div>
+              </button>
+            </div>
+
+          </div>
+        </main>
       </div>
     </>
   );

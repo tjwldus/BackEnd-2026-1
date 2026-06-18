@@ -1,126 +1,103 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import BackgroundBlobs from "../components/BackgroundBlobs.jsx";
-import Navbar from "../components/Navbar.jsx";
+import BackgroundLines from "../components/BackgroundLines.jsx";
+import NavBar from "../components/Navbar.jsx";
 
-// 임시 사람 목록 (추후 백엔드/localStorage 연동)
-const MOCK_PEOPLE = [
-  { id: "p1", name: "외할머니", relation: "가족", lastTalkedAgo: "오늘" },
-  { id: "p2", name: "철수", relation: "연인", lastTalkedAgo: "3일 전" },
+const DAILY_QUOTES = [
+  "그리움은 사랑이 남긴 흔적이에요.",
+  "보고 싶다는 마음만으로도, 충분히 잘 사랑했어요.",
+  "떠난 사람도, 남은 사람도, 모두 애썼어요.",
+  "기억한다는 건 여전히 함께라는 뜻이에요.",
+  "천천히 가도 괜찮아요. 지금 이 속도로 충분해요.",
+  "슬픔은 사라지는 게 아니라 익숙해지는 거래요.",
+  "오늘 하루도 버텨낸 것만으로 잘한 거예요.",
 ];
 
-// 회복 도구 카드들
 const TOOLS = [
   {
     id: "letter",
     title: "편지 쓰기",
-    desc: "답장이 오지 않는 편지를 부쳐보세요",
+    desc: "전하지 못한 말을 적어보세요",
     icon: "ti-mail",
     accent: "from-warm-peach to-warm-apricot",
-    to: (p) => `/letter/${p?.id || "p1"}`,
+    to: "/letter",
   },
   {
-    id: "journal",
+    id: "diary",
     title: "오늘의 마음",
     desc: "지금 느끼는 감정을 짧게 적어요",
     icon: "ti-notebook",
     accent: "from-warm-lavender to-warm-rose",
-    to: () => "/journal",
+    to: "/diary",
   },
 ];
 
 export default function Home() {
   const navigate = useNavigate();
+  const today = new Date();
+  const quote = DAILY_QUOTES[today.getDate() % DAILY_QUOTES.length];
 
   return (
     <>
       <BackgroundBlobs />
-      <Navbar />
+      <BackgroundLines />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-10 pb-20 animate-fade-up">
-        {/* 인사 헤더 */}
-        <div className="mb-8">
-          <p className="text-xs text-warm-faint mb-1">오늘도 잘 오셨어요</p>
-          <h1 className="font-serif text-3xl sm:text-4xl text-warm-ink tracking-tight">
-            잠시 머무르다 가세요
-          </h1>
-        </div>
+      <div className="flex h-screen overflow-hidden" style={{ position: "relative", zIndex: 1 }}>
+        <NavBar />
 
-        {/* 내 사람들 섹션 */}
-        <section className="mb-12">
-          <div className="flex items-end justify-between mb-4">
-            <h2 className="text-lg font-semibold text-warm-ink">내 사람들</h2>
-            <button
-              onClick={() => navigate("/welcome")}
-              className="text-xs text-warm-faint hover:text-warm-ink inline-flex items-center gap-1"
-            >
-              <i className="ti ti-plus" aria-hidden="true" /> 새로 추가
-            </button>
-          </div>
+        <main className="flex-1 overflow-y-auto">
+          <div className="max-w-3xl mx-auto px-8 py-16 animate-fade-up">
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {MOCK_PEOPLE.map((p) => (
-              <Link
-                key={p.id}
-                to={`/chat/${p.id}`}
-                className="glass-warm rounded-2xl p-5 hover:-translate-y-1 hover:shadow-[0_16px_44px_rgba(180,95,80,0.14)] transition-all"
-              >
-                <div className="flex items-center gap-3 mb-2.5">
-                  <div className="w-11 h-11 rounded-full bg-gradient-to-br from-warm-peach to-warm-rose text-white inline-flex items-center justify-center font-serif text-lg">
-                    {p.name.slice(0, 1)}
-                  </div>
-                  <div>
-                    <div className="font-semibold text-warm-ink">{p.name}</div>
-                    <div className="text-[11px] text-warm-faint">
-                      {p.relation}
+            {/* 오늘의 말 */}
+            <div className="mt-20 mb-5">
+              <p className="text-xs text-warm-faint tracking-widest mb-6">
+                오늘의 말
+              </p>
+              <blockquote className="font-serif text-2xl sm:text-3xl text-warm-ink leading-relaxed">
+                "{quote}"
+              </blockquote>
+            </div>
+
+            {/* 구분선 */}
+            <div className="w-12 h-px bg-warm-apricot/30 mb-16" />
+
+            {/* 회복 도구 */}
+            <div>
+              <p className="text-xs text-warm-faint tracking-widest mb-6">
+                함께하는 도구
+              </p>
+              <div className="space-y-0">
+                {TOOLS.map((t, idx) => (
+                  <button
+                    key={t.id}
+                    onClick={() => navigate(t.to)}
+                    className={`w-full flex items-center gap-4 px-4 py-4 hover:bg-white/30 transition-all text-left group ${
+                      idx === 0 ? "border-t border-b border-warm-apricot/20" : "border-b border-warm-apricot/20"
+                    }`}
+                  >
+                    <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${t.accent} text-white inline-flex items-center justify-center flex-none`}>
+                      <i className={`ti ${t.icon} text-base`} aria-hidden="true" />
                     </div>
-                  </div>
-                </div>
-                <div className="text-xs text-warm-soft">
-                  마지막 만남 · {p.lastTalkedAgo}
-                </div>
-              </Link>
-            ))}
+                    <div className="flex-1">
+                      <div className="font-semibold text-warm-ink text-sm">{t.title}</div>
+                      <div className="text-xs text-warm-soft mt-0.5">{t.desc}</div>
+                    </div>
+                    <i className="ti ti-arrow-right text-warm-apricot/40 group-hover:text-warm-apricot/70 transition-colors text-sm" aria-hidden="true" />
+                  </button>
+                ))}
+              </div>
+            </div>
 
-            {/* 빈 슬롯 - 새 사람 추가 */}
-            <button
-              onClick={() => navigate("/welcome")}
-              className="rounded-2xl border-2 border-dashed border-warm-faint/30 p-5 text-warm-faint hover:text-warm-ink hover:border-warm-faint/60 transition-all flex flex-col items-center justify-center gap-2 min-h-[120px]"
-            >
-              <i className="ti ti-plus text-2xl" aria-hidden="true" />
-              <span className="text-sm">새 사람 추가</span>
-            </button>
+            {/* 안전 안내 */}
+            <p className="text-center text-[11px] text-warm-soft/50 mt-16 leading-relaxed">
+              전문 상담 시스템이 아닙니다.
+              <br />
+              많이 힘드시다면{" "}
+              <span className="font-semibold text-warm-ink">자살예방상담 1393</span>
+              으로 연락주세요.
+            </p>
           </div>
-        </section>
-
-        {/* 회복 도구 섹션 */}
-        <section>
-          <h2 className="text-lg font-semibold text-warm-ink mb-4">
-            함께하는 도구
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {TOOLS.map((t) => (
-              <Link
-                key={t.id}
-                to={t.to(MOCK_PEOPLE[0])}
-                className="glass-warm rounded-2xl p-5 hover:-translate-y-1 hover:shadow-[0_16px_44px_rgba(180,95,80,0.14)] transition-all flex items-start gap-4"
-              >
-                <div
-                  className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${t.accent} text-white inline-flex items-center justify-center shadow-md flex-none`}
-                >
-                  <i className={`ti ${t.icon} text-xl`} aria-hidden="true" />
-                </div>
-                <div>
-                  <div className="font-semibold text-warm-ink mb-0.5">
-                    {t.title}
-                  </div>
-                  <div className="text-xs text-warm-soft leading-relaxed">
-                    {t.desc}
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
+        </main>
       </div>
     </>
   );

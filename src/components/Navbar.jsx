@@ -1,52 +1,66 @@
-import { Link, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
-export default function Navbar() {
-  const { pathname } = useLocation();
+const NAV_ITEMS = [
+  { icon: "ti-home", label: "홈", to: "/home" },
+  { icon: "ti-message", label: "채팅", to: "/chat/list" },
+  { icon: "ti-mail", label: "편지", to: "/letter" },
+  { icon: "ti-notebook", label: "마음일기", to: "/diary" },
+  { icon: "ti-settings", label: "설정", to: "/settings" },
+];
+
+export default function NavBar() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("email");
+    navigate("/login");
+  };
 
   return (
-    <header className="sticky top-0 z-20 glass-warm border-b border-white/50">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2.5">
-          <span className="w-8 h-8 rounded-full bg-gradient-to-br from-warm-apricot to-warm-rose text-white inline-flex items-center justify-center shadow-md">
-            <i className="ti ti-flower text-base" aria-hidden="true" />
-          </span>
-          <span className="font-serif text-xl text-warm-ink tracking-tight">
-            다시
-          </span>
-        </Link>
-
-        <nav className="flex items-center gap-1">
-          <NavLink to="/" active={pathname === "/"} icon="ti-home" label="홈" />
-          <NavLink
-            to="/journal"
-            active={pathname.startsWith("/journal")}
-            icon="ti-notebook"
-            label="마음일기"
-          />
-          <NavLink
-            to="/settings"
-            active={pathname.startsWith("/settings")}
-            icon="ti-settings"
-            label="설정"
-          />
-        </nav>
+    <nav className="w-14 flex-shrink-0 glass-warm border-r border-white/30 flex flex-col items-center py-4 gap-1">
+      {/* 로고 */}
+      <div
+        className="font-serif text-lg text-warm-ink mb-4 cursor-pointer"
+        onClick={() => navigate("/home")}
+      >
+        <i className="ti ti-flower text-base" aria-hidden="true" />
       </div>
-    </header>
-  );
-}
 
-function NavLink({ to, active, icon, label }) {
-  return (
-    <Link
-      to={to}
-      className={`px-3 py-1.5 rounded-full text-sm inline-flex items-center gap-1.5 transition-all ${
-        active
-          ? "bg-warm-ink/90 text-white"
-          : "text-warm-soft hover:text-warm-ink hover:bg-white/40"
-      }`}
-    >
-      <i className={`ti ${icon}`} aria-hidden="true" />
-      <span className="hidden sm:inline">{label}</span>
-    </Link>
+      {/* 메뉴 */}
+      {NAV_ITEMS.map((item) => (
+        <button
+          key={item.to}
+          onClick={() => navigate(item.to)}
+          title={item.label}
+          className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all relative group ${
+            location.pathname === item.to
+              ? "bg-gradient-to-br from-warm-apricot to-warm-rose text-white shadow-md"
+              : "text-warm-soft hover:text-warm-ink hover:bg-white/40"
+          }`}
+        >
+          <i className={`ti ${item.icon} text-lg`} aria-hidden="true" />
+          {/* 툴팁 */}
+          <span className="absolute left-12 bg-warm-ink/80 text-white text-xs rounded-lg px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+            {item.label}
+          </span>
+        </button>
+      ))}
+
+      {/* 로그아웃 — 하단 고정 */}
+      <div className="mt-auto">
+        <button
+          onClick={handleLogout}
+          title="로그아웃"
+          className="w-10 h-10 rounded-xl flex items-center justify-center text-warm-soft hover:text-warm-rose hover:bg-white/40 transition-all relative group"
+        >
+          <i className="ti ti-logout text-lg" aria-hidden="true" />
+          <span className="absolute left-12 bg-warm-ink/80 text-white text-xs rounded-lg px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+            로그아웃
+          </span>
+        </button>
+      </div>
+    </nav>
   );
 }
